@@ -105,6 +105,14 @@ netcfg_bridge()
         exit 1
     }
 
+    # When ip configuration is requested, configure it here
+    for ip_cfg in ${!NETCFG_IP_*}; do
+        eval ip_cfg=\$${ip_cfg}
+        ip netns exec ${ns_pid} ip addr add ${ip_cfg} dev ${guest_if} 2>/dev/null || {
+            echo "WARNING: Failed to configure IP address '${ip_cfg}' for '${guest_if}'."
+        }
+    done
+
     ip netns exec ${ns_pid} ip link set ${guest_if} up || {
         # Try to cleanup after ourselves
         ip link delete dev ${veth_host} 2>/dev/null
@@ -151,6 +159,11 @@ case "$1" in
         echo "Usage:"
         echo "  $0 bridge <container> <host-if> <guest-if>"
         echo "  $0 exists <container> <guest-if>"
+        echo ""
+        echo "The following environmental variables may be set to configure addressing:"
+        echo ""
+        echo "  NETCFG_IP_<idx>      configure multiple IP addresses (IPv4 or IPv6)"
+        echo ""
         exit 1
         ;;
 esac
