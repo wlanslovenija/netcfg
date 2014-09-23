@@ -2,6 +2,7 @@
 import argparse
 import json
 import logging
+import logging.handlers
 import os
 import sys
 
@@ -67,11 +68,16 @@ if __name__ == '__main__':
     args = parser.parse_args(sys.argv[1:])
 
     if args.cmd == 'daemon':
-        # Setup logging to standard output
-        logging.basicConfig(
-            format='%(asctime)-15s [%(levelname)s] [%(name)s] %(message)s',
-            level=getattr(logging, args.log_level.upper()),
+        # Setup logging to syslog
+        logger = logging.getLogger('netcfg')
+        logger.setLevel(getattr(logging, args.log_level.upper()))
+        handler = logging.handlers.SysLogHandler(
+            address='/dev/log',
+            facility=logging.handlers.SysLogHandler.LOG_DAEMON,
         )
+        formatter = logging.Formatter('%(asctime)s %(name)s: %(levelname)s %(message)s', '%b %e %H:%M:%S')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
         from netcfg import daemon
 
