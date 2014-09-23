@@ -236,8 +236,11 @@ class Daemon(object):
                 except KeyError:
                     raise ErrorResponse('Container does not exist.')
 
-                container.detach(net)
-                self.save_config()
+                try:
+                    container.detach(net)
+                    self.save_config()
+                except KeyError, e:
+                    raise ErrorResponse(e.message)
 
                 response = {
                     'success': 'Network detached.',
