@@ -195,7 +195,7 @@ class Daemon(object):
                     }
                 else:
                     response = {
-                        'error': 'Network already exists.',
+                        'success': 'Network already exists.',
                         'network': net.serialize(),
                     }
             elif msg['method'] == 'attach':
