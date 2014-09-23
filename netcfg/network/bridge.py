@@ -32,11 +32,19 @@ class BridgeNetwork(base.Network):
         :param netcfg: Network configuration
         """
 
-        for address in netcfg.get('address', []):
-            try:
-                ipaddr.IPNetwork(address)
-            except ValueError:
-                raise base.NetworkConfigurationError('Invalid IPv4/IPv6 address: %s' % address)
+        if netcfg is None:
+            netcfg = {}
+
+        # Configure addressing
+        addresses = netcfg.get('address', None) or []
+        if not isinstance(addresses, list):
+            raise base.NetworkConfigurationError('Invalid address configuration.')
+        else:
+            for address in addresses:
+                try:
+                    ipaddr.IPNetwork(address)
+                except ValueError:
+                    raise base.NetworkConfigurationError('Invalid IPv4/IPv6 address: %s' % address)
 
     def apply(self, container, netcfg=None, detach=False):
         """
@@ -104,7 +112,7 @@ class BridgeNetwork(base.Network):
                     return
 
                 # When requested, setup IP configuration
-                for ip in netcfg.get('address', []):
+                for ip in netcfg.get('address', None) or []:
                     try:
                         self.execute('ip netns exec %s ip addr add %s dev %s' % (netns, ip, ifname))
                     except subprocess.CalledProcessError:
