@@ -1,4 +1,4 @@
 netcfg
 ======
 
-Simple L2 network bridge configuration for Docker containers.
+Simple network bridge configuration for Docker containers.

@@ -1,0 +1,105 @@
+#!/usr/bin/env python
+import argparse
+import json
+import logging
+import os
+import sys
+
+if __name__ == '__main__':
+    # Check if we are running as root
+    if os.getuid() != 0:
+        print "ERROR: Netcfg must be run as root!"
+        sys.exit(1)
+
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Network configuration of Docker containers.')
+    parser.add_argument('--docker', help='path to Docker socket', default='/var/run/docker.sock')
+    parser.add_argument('--ipc', help='path to IPC socket', default='/var/run/netcfg.sock')
+    subparsers = parser.add_subparsers()
+
+    # Command: start daemon
+    parser_daemon = subparsers.add_parser('daemon', help='start the netcfg daemon')
+    parser_daemon.add_argument(
+        '--config',
+        default='/var/lib/netcfg/netcfg.json',
+        help='path to configuration file',
+    )
+    parser_daemon.add_argument(
+        '--log-level',
+        choices=['debug', 'info', 'warning', 'error'],
+        default='info',
+        help='sets the log level',
+    )
+    parser_daemon.set_defaults(cmd='daemon')
+
+    # Command: create network
+    parser_create = subparsers.add_parser('create', help='create a new network configuration')
+    parser_create.add_argument('name', help='network name')
+    parser_create.add_argument('type', choices=['bridge'], help='network type')
+    parser_create.add_argument(
+        '--destroy-on-stop',
+        action='store_true',
+        help='destroy network when all containers attached to the network are stopped',
+    )
+    parser_create.set_defaults(cmd='create')
+
+    # Command: attach container to network
+    parser_attach = subparsers.add_parser('attach', help='attach a container to a network')
+    parser_attach.add_argument('container', help='container name')
+    parser_attach.add_argument('network', help='network name')
+    parser_attach.add_argument(
+        '--address',
+        action='append',
+        help='add address configuration (may be specified multiple times to add multiple addresses)',
+    )
+    parser_attach.set_defaults(cmd='attach')
+
+    # Command: detach container from network
+    parser_detach = subparsers.add_parser('detach', help='detach a container from a network')
+    parser_detach.add_argument('container', help='container name')
+    parser_detach.add_argument('network', help='network name')
+    parser_detach.set_defaults(cmd='detach')
+
+    # Command: show current network configuration
+    parser_show = subparsers.add_parser('show', help='show current configuration')
+    parser_show.set_defaults(cmd='show')
+
+    args = parser.parse_args(sys.argv[1:])
+
+    if args.cmd == 'daemon':
+        # Setup logging to standard output
+        logging.basicConfig(
+            format='%(asctime)-15s [%(levelname)s] [%(name)s] %(message)s',
+            level=getattr(logging, args.log_level.upper()),
+        )
+
+        from netcfg import daemon
+
+        try:
+            daemon.Daemon(
+                ipc_socket_path=args.ipc,
+                docker_socket_path=args.docker,
+                config_path=args.config,
+            ).start()
+        except KeyboardInterrupt:
+            pass
+    else:
+        from netcfg import client
+        cli = client.Client(ipc_socket_path=args.ipc)
+
+        rsp = None
+        if args.cmd == 'create':
+            rsp = cli.create_network(args.type, args.name, destroy_on_stop=args.destroy_on_stop)
+        elif args.cmd == 'attach':
+            rsp = cli.attach(args.container, args.network, address=args.address)
+        elif args.cmd == 'detach':
+            rsp = cli.detach(args.container, args.network)
+        elif args.cmd == 'show':
+            rsp = cli.get_config()
+            rsp['success'] = json.dumps(rsp['config'], sort_keys=True, indent=2, separators=(',', ': '))
+
+        if rsp and 'error' in rsp:
+            print "ERROR: %s" % rsp['error']
+            sys.exit(1)
+        elif 'success' in rsp:
+            print rsp['success']
