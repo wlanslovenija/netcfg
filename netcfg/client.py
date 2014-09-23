@@ -42,6 +42,13 @@ class Client(object):
 
         return self._method('set_config', config=config)
 
+    def flush(self):
+        """
+        Clear network configuration.
+        """
+
+        return self._method('flush')
+
     def create_network(self, type, name, destroy_on_stop=False, **kwargs):
         """
         Creates a new network.

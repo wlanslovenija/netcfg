@@ -65,6 +65,10 @@ if __name__ == '__main__':
     parser_show = subparsers.add_parser('show', help='show current configuration')
     parser_show.set_defaults(cmd='show')
 
+    # Command: clear current network configuration
+    parser_flush = subparsers.add_parser('flush', help='clear current configuration')
+    parser_flush.set_defaults(cmd='flush')
+
     args = parser.parse_args(sys.argv[1:])
 
     if args.cmd == 'daemon':
@@ -103,6 +107,8 @@ if __name__ == '__main__':
         elif args.cmd == 'show':
             rsp = cli.get_config()
             rsp['success'] = json.dumps(rsp['config'], sort_keys=True, indent=2, separators=(',', ': '))
+        elif args.cmd == 'flush':
+            rsp = cli.flush()
 
         if rsp and 'error' in rsp:
             print "ERROR: %s" % rsp['error']

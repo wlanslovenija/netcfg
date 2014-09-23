@@ -176,7 +176,14 @@ class Daemon(object):
             if 'method' not in msg:
                 raise ValueError
 
-            if msg['method'] == 'create_network':
+            if msg['method'] == 'flush':
+                logger.info("Flushing all network configuration.")
+
+                self.config.flush()
+                self.save_config()
+
+                response = {'success': 'Configuration flushed.'}
+            elif msg['method'] == 'create_network':
                 network_type = msg['type']
                 base_cfg = msg.get('config', {})
                 base_cfg['name'] = msg['name']

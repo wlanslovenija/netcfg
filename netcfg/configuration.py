@@ -88,6 +88,14 @@ class Configuration(object):
             if ctr.is_running:
                 ctr.apply()
 
+    def flush(self):
+        """
+        Clears network configuration.
+        """
+
+        self.containers = {}
+        self.networks = {}
+
     def serialize(self):
         """
         Prepares configuration so it is suitable for serialization into
