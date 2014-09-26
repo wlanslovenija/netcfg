@@ -22,16 +22,16 @@ with root privileges and given access to the Docker IPC socket::
 
   $ netcfg daemon
 
-By default, netcfg stores configuration under `/var/lib/netcfg/netcfg.json`, but this location
-may be overriden by using the `--config` command-line argument. After the daemon is running
-in the background, one can setup netcfg configuration by calling the `netcfg` script.
+By default, netcfg stores configuration under ``/var/lib/netcfg/netcfg.json``, but this location
+may be overriden by using the ``--config`` command-line argument. After the daemon is running
+in the background, one can setup netcfg configuration by calling the ``netcfg`` script.
 
 First, one should define one or more networks::
 
   $ netcfg create foo0 bridge
 
 The first argument specifies the network name and the other specifies the network type. Currently
-only networks with type `bridge` are supported, but netcfg implements different network types as
+only networks with type ``bridge`` are supported, but netcfg implements different network types as
 modules so new ones could be added.
 
 Then, we can attach networks to one or more containers::
