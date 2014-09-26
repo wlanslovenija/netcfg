@@ -193,6 +193,8 @@ class Daemon(object):
                     net, created = self.config.add_network(network_type, **base_cfg)
                 except ValueError:
                     raise ErrorResponse('Unknown network type.')
+                except network_base.NetworkConfigurationError, e:
+                    raise ErrorResponse('Error creating network: %s' % e.message)
 
                 if created:
                     self.save_config()

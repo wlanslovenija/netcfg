@@ -14,6 +14,16 @@ class BridgeNetwork(base.Network):
     Bridged network implementation.
     """
 
+    def __init__(self, name, **kwargs):
+        """
+        Class constructor.
+        """
+
+        if len(name) > 15:
+            raise base.NetworkConfigurationError('Bridge network name can be at most 15 characters long!')
+
+        super(BridgeNetwork, self).__init__(name, **kwargs)
+
     def __repr__(self):
         return '<BridgeNetwork \'%s\'>' % self.name
 
